@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.version       = Rickey::VERSION
   spec.authors       = ["Takatoshi Ono"]
   spec.email         = ["takatoshi.ono@gmail.com"]
-  spec.summary       = %q{TODO: Write a short summary. Required.}
-  spec.description   = %q{TODO: Write a longer description. Optional.}
+  spec.summary       = %q{Squeeze photo ratings into flickr tags}
+  spec.description   = %q{Rickey is a command line tool to add rating tags to flickr photos.}
   spec.homepage      = ""
   spec.license       = "MIT"
 

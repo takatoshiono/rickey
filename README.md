@@ -1,6 +1,6 @@
 # Rickey
 
-TODO: Write a gem description
+Add rating tags to flickr photos.
 
 ## Installation
 
@@ -20,7 +20,27 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+### Showing
+
+Show iPhoto albums.
+
+    $ rickey show albums
+
+Show photos in an album.
+
+    $ rickey show photos --album [AlbumId]
+
+### Tagging
+
+Tag ratings to flickr photos.
+
+    $ rickey tag-ratings --album [AlbumId]
+
+### Help
+
+Show help message.
+
+    $ rickey help
 
 ## Contributing
 
