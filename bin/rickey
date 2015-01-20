@@ -2,6 +2,8 @@
 
 require 'Thor'
 require 'rickey'
+require 'flickraw'
+require 'dotenv'
 
 class RickeyCommand < Thor
   desc 'show [albums|photos] --album [AlbumId]', 'Show iPhoto albums and photos.'
@@ -15,7 +17,19 @@ class RickeyCommand < Thor
   def tag(target)
     p "This is tag command. Target is '#{target}'"
     p options
+
+    FlickRaw.api_key = ENV['FLICKR_API_KEY']
+    FlickRaw.shared_secret = ENV['FLICKR_API_SECRET']
+
+    # TODO required OAuth authentication ...
+    photos = flickr.photos.search(
+      user_id: 'me',
+      text: 'CIMG1402',
+    )
+
+    p photos
   end
 end
 
+Dotenv.load
 RickeyCommand.start
