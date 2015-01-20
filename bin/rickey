@@ -1,3 +1,21 @@
 #!/usr/bin/env ruby
 
+require 'Thor'
 require 'rickey'
+
+class RickeyCommand < Thor
+  desc 'show [albums|photos] --album [AlbumId]', 'Show iPhoto albums and photos.'
+  method_option :album, type: :numeric, desc: 'Album id. This is required when showing photos'
+  def show(target)
+    p "This is show command. Target is '#{target}'"
+    p options
+  end
+
+  desc 'tag [ratings]', 'Add rating tags for flickr photos'
+  def tag(target)
+    p "This is tag command. Target is '#{target}'"
+    p options
+  end
+end
+
+RickeyCommand.start

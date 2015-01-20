@@ -34,7 +34,7 @@ Show photos in an album.
 
 Tag ratings to flickr photos.
 
-    $ rickey tag-ratings --album [AlbumId]
+    $ rickey tag ratings --album [AlbumId]
 
 ### Help
 
