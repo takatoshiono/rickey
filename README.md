@@ -1,6 +1,6 @@
 # Rickey
 
-Add rating tags to flickr photos.
+Add rating tags to flickr photos from an iPhoto library.
 
 ## Installation
 
