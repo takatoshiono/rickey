@@ -18,6 +18,15 @@ Or install it yourself as:
 
     $ gem install rickey
 
+## Setup
+
+In your .env file
+
+```
+FLICKR_API_KEY=[flickr api key]
+FLICKR_API_SECRET=[flickr api secret]
+```
+
 ## Usage
 
 ### Showing
