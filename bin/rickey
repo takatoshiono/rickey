@@ -22,12 +22,41 @@ class RickeyCommand < Thor
     FlickRaw.shared_secret = ENV['FLICKR_API_SECRET']
 
     # TODO required OAuth authentication ...
+    token = flickr.get_request_token
+    auth_url = flickr.get_authorize_url(token['oauth_token'], perms: 'write')
+
+    puts "Authorization url: #{auth_url}"
+    ask 'Press any key to open:'
+    `open '#{auth_url}'`
+    verify = ask "Enter authorization code:"
+
+    begin
+      flickr.get_access_token(token['oauth_token'], token['oauth_token_secret'], verify)
+      login = flickr.test.login
+      puts "You are now authenticated as #{login.username} with token #{flickr.access_token} and secret #{flickr.access_secret}"
+      append_to_dotenv(
+        FLICKR_ACCESS_TOKEN: flickr.access_token,
+        FLICKR_ACCESS_SECRET: flickr.access_secret,
+      )
+    rescue FlickRaw::FailedResponse => e
+      puts "Authentication failed : #{e.msg}"
+      raise
+    end
+
     photos = flickr.photos.search(
       user_id: 'me',
       text: 'CIMG1402',
     )
 
     p photos
+  end
+end
+
+def append_to_dotenv(settings)
+  File.open('.env', 'a') do |f|
+    settings.each do |k, v|
+      f.puts "#{k.upcase}=#{v}"
+    end
   end
 end
 
