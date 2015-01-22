@@ -18,10 +18,20 @@ class RickeyCommand < Thor
     p "This is tag command. Target is '#{target}'"
     p options
 
+    login_flickr
+
+    photos = flickr.photos.search(
+      user_id: 'me',
+      text: 'CIMG1402',
+    )
+
+    p photos
+  end
+
+  def login_flickr
     FlickRaw.api_key = ENV['FLICKR_API_KEY']
     FlickRaw.shared_secret = ENV['FLICKR_API_SECRET']
 
-    # TODO required OAuth authentication ...
     token = flickr.get_request_token
     auth_url = flickr.get_authorize_url(token['oauth_token'], perms: 'write')
 
@@ -42,13 +52,6 @@ class RickeyCommand < Thor
       puts "Authentication failed : #{e.msg}"
       raise
     end
-
-    photos = flickr.photos.search(
-      user_id: 'me',
-      text: 'CIMG1402',
-    )
-
-    p photos
   end
 end
 
