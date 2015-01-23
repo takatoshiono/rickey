@@ -2,6 +2,7 @@
 
 require 'Thor'
 require 'rickey'
+require 'rickey/iphoto'
 require 'flickraw'
 require 'dotenv'
 
@@ -11,6 +12,20 @@ class RickeyCommand < Thor
   def show(target)
     p "This is show command. Target is '#{target}'"
     p options
+
+    iphoto = Rickey::Iphoto.new(ENV['IPHOTO_LIBRARY_PATH'])
+
+    case target
+    when 'albums'
+      # {"AlbumId"=>4, "AlbumName"=>"Photos", "Album Type"=>"99", "GUID"=>"allPhotosAlbum", "Master"=>true, "TransitionSpeed"=>1.0, "ShuffleSlides"=>false, "KeyList"=>["29", "1", "9", "3", "25", "19", "5", "13", "17", "21", "7", "23", "15", "27", "11"], "PhotoCount"=>15}
+      iphoto.albums.each do |album|
+        puts "id:#{album['AlbumId']}, count:#{album['PhotoCount']}, type:#{album['Album Type']}, name:#{album['AlbumName']}"
+      end
+    when 'photos'
+      puts 'photos'
+    else
+      puts 'Unkown subcommand.'
+    end
   end
 
   desc 'tag [ratings]', 'Add rating tags for flickr photos'
