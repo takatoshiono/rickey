@@ -39,19 +39,37 @@ class RickeyCommand < Thor
     end
   end
 
-  desc 'tag [ratings]', 'Add rating tags for flickr photos'
+  desc 'tag [ratings] --album [AlbumId]', 'Add rating tags for flickr photos'
+  method_option :album, type: :numeric, desc: 'Album id to tag'
   def tag(target)
     p "This is tag command. Target is '#{target}'"
     p options
 
+    return unless  target == 'ratings'
+
     login_flickr
 
-    photos = flickr.photos.search(
-      user_id: 'me',
-      text: 'CIMG1402',
-    )
+    iphoto = Rickey::Iphoto.new(ENV['IPHOTO_LIBRARY_PATH'])
 
-    p photos
+    album = iphoto.album(id: options['album'])
+    photos = iphoto.photos_by_ids(album['KeyList'])
+    photos.each do |photo|
+      # NOTE ファイル名(Caption)だけだと重複するので他にキーが必要
+      # 用途から考えると新しい方(photo.idの大きい方)を取ればよさそうだが
+      flickr_photos = flickr.photos.search(
+        user_id: 'me',
+        text: photo['Caption'],
+      )
+
+      p flickr_photos
+      # [{"id"=>"13059734313", "owner"=>"27830585@N06", "secret"=>"8af0436f99", "server"=>"7423", "farm"=>8, "title"=>"IMG_5162", "ispublic"=>0, "isfriend"=>0, "isfamily"=>1}]
+      #flickr.photos.addTags
+      # https://farm{farm-id}.staticflickr.com/{server-id}/{id}_{secret}.jpg
+      flickr_photos.each do |p|
+        puts "https://farm#{p['farm']}.staticflickr.com/#{p['server']}/#{p['id']}_#{p['secret']}.jpg"
+      end
+    end
+
   end
 
   def login_flickr
