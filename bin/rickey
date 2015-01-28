@@ -68,6 +68,12 @@ class RickeyCommand < Thor
       flickr_photos.each do |p|
         puts "https://farm#{p['farm']}.staticflickr.com/#{p['server']}/#{p['id']}_#{p['secret']}.jpg"
       end
+
+      flickr_photo = flickr_photos.sort { |a, b| a['id'].to_i <=> b['id'].to_i }.last
+
+      puts "choose: #{flickr_photo['id']}"
+
+      # TODO こうして選んだ photo に rating の tag を追加すればおわり
     end
 
   end
