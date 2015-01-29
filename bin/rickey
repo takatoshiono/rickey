@@ -54,6 +54,8 @@ class RickeyCommand < Thor
     album = iphoto.album(id: options['album'])
     photos = iphoto.photos_by_ids(album['KeyList'])
     photos.each do |photo|
+      next if photo['Rating'] < 1
+
       # NOTE ファイル名(Caption)だけだと重複するので他にキーが必要
       # 用途から考えると新しい方(photo.idの大きい方)を取ればよさそうだが
       flickr_photos = flickr.photos.search(
@@ -73,7 +75,11 @@ class RickeyCommand < Thor
 
       puts "choose: #{flickr_photo['id']}"
 
-      # TODO こうして選んだ photo に rating の tag を追加すればおわり
+      response = flickr.photos.addTags(
+        photo_id: flickr_photo['id'],
+        tags: "#{photo['Rating']}star",
+      )
+      p response
     end
 
   end
