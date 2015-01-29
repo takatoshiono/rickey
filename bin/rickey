@@ -116,13 +116,13 @@ class RickeyCommand < Thor
         end
       end
     end
-  end
-end
 
-def append_to_dotenv(settings)
-  File.open('.env', 'a') do |f|
-    settings.each do |k, v|
-      f.puts "#{k.upcase}=#{v}"
+    def append_to_dotenv(settings)
+      File.open('.env', 'a') do |f|
+        settings.each do |k, v|
+          f.puts "#{k.upcase}=#{v}"
+        end
+      end
     end
   end
 end
