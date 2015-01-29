@@ -75,9 +75,13 @@ class RickeyCommand < Thor
 
       puts "choose: #{flickr_photo['id']}"
 
+      tag = tag_name(photo['Rating'])
+
+      puts "tag: #{tag}"
+
       response = flickr.photos.addTags(
         photo_id: flickr_photo['id'],
-        tags: "#{photo['Rating']}star",
+        tags: tag,
       )
       p response
     end
@@ -123,6 +127,16 @@ class RickeyCommand < Thor
           f.puts "#{k.upcase}=#{v}"
         end
       end
+    end
+
+    def tag_name(rating)
+      {
+        '1' => 'hi',
+        '2' => '',
+        '3' => '',
+        '4' => '',
+        '5' => 'important',
+      }[rating.to_s]
     end
   end
 end
