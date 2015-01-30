@@ -2,6 +2,7 @@
 
 require 'Thor'
 require 'rickey'
+require 'rickey/iphoto'
 require 'flickraw'
 require 'dotenv'
 
@@ -11,23 +12,126 @@ class RickeyCommand < Thor
   def show(target)
     p "This is show command. Target is '#{target}'"
     p options
+
+    iphoto = Rickey::Iphoto.new(ENV['IPHOTO_LIBRARY_PATH'])
+
+    case target
+    when 'albums'
+      # {"AlbumId"=>4, "AlbumName"=>"Photos", "Album Type"=>"99", "GUID"=>"allPhotosAlbum", "Master"=>true, "TransitionSpeed"=>1.0, "ShuffleSlides"=>false, "KeyList"=>["29", "1", "9", "3", "25", "19", "5", "13", "17", "21", "7", "23", "15", "27", "11"], "PhotoCount"=>15}
+      iphoto.albums.each do |album|
+        puts "id:#{album['AlbumId']}, count:#{album['PhotoCount']}, type:#{album['Album Type']}, name:#{album['AlbumName']}"
+      end
+    when 'photos'
+      puts 'photos'
+      unless options['album']
+        puts '--album [AlbumId] required.'
+        return
+      end
+
+      album = iphoto.album(id: options['album'])
+      photos = iphoto.photos_by_ids(album['KeyList'])
+      photos.each do |photo|
+        # {"Caption"=>"IMG_5162", "Comment"=>" ", "GUID"=>"rRDHuaQoRvykMfcgqs7mAw", "Roll"=>8, "Rating"=>1, "ImagePath"=>"/Users/usr0600268/Pictures/iPhoto Library.photolibrary/Masters/2014/12/24/20141224-133908/IMG_5162.jpg", "MediaType"=>"Image", "ModDateAsTimerInterval"=>440262486.0, "DateAsTimerInterval"=>414846808.0, "DateAsTimerIntervalGMT"=>414879208.0, "MetaModDateAsTimerInterval"=>441161002.380927, "ThumbPath"=>"/Users/usr0600268/Pictures/iPhoto Library.photolibrary/Thumbnails/2014/12/24/20141224-133908/rRDHuaQoRvykMfcgqs7mAw/IMG_5162.jpg"}
+        puts "caption: #{photo['Caption']}, rating: #{photo['Rating']}"
+      end
+    else
+      puts 'Unkown subcommand.'
+    end
   end
 
-  desc 'tag [ratings]', 'Add rating tags for flickr photos'
+  desc 'tag [ratings] --album [AlbumId]', 'Add rating tags for flickr photos'
+  method_option :album, type: :numeric, desc: 'Album id to tag'
   def tag(target)
     p "This is tag command. Target is '#{target}'"
     p options
 
-    FlickRaw.api_key = ENV['FLICKR_API_KEY']
-    FlickRaw.shared_secret = ENV['FLICKR_API_SECRET']
+    return unless  target == 'ratings'
 
-    # TODO required OAuth authentication ...
-    photos = flickr.photos.search(
-      user_id: 'me',
-      text: 'CIMG1402',
-    )
+    login_flickr
 
-    p photos
+    iphoto = Rickey::Iphoto.new(ENV['IPHOTO_LIBRARY_PATH'])
+
+    album = iphoto.album(id: options['album'])
+    photos = iphoto.photos_by_ids(album['KeyList'])
+    photos.each do |photo|
+      next if photo['Rating'] < 1
+
+      # NOTE ファイル名(Caption)だけだと重複するので他にキーが必要
+      # 用途から考えると新しい方(photo.idの大きい方)を取ればよさそうだが
+      flickr_photos = flickr.photos.search(
+        user_id: 'me',
+        text: photo['Caption'],
+      )
+
+      p flickr_photos
+      # [{"id"=>"13059734313", "owner"=>"27830585@N06", "secret"=>"8af0436f99", "server"=>"7423", "farm"=>8, "title"=>"IMG_5162", "ispublic"=>0, "isfriend"=>0, "isfamily"=>1}]
+      #flickr.photos.addTags
+      # https://farm{farm-id}.staticflickr.com/{server-id}/{id}_{secret}.jpg
+      flickr_photos.each do |p|
+        puts "https://farm#{p['farm']}.staticflickr.com/#{p['server']}/#{p['id']}_#{p['secret']}.jpg"
+      end
+
+      flickr_photo = flickr_photos.sort { |a, b| a['id'].to_i <=> b['id'].to_i }.last
+
+      puts "choose: #{flickr_photo['id']}"
+
+      tag = tag_name(photo['Rating'])
+
+      puts "tag: #{tag}"
+
+      response = flickr.photos.addTags(
+        photo_id: flickr_photo['id'],
+        tags: tag,
+      )
+      p response
+    end
+
+  end
+
+  no_commands do
+    def login_flickr
+      FlickRaw.api_key = ENV['FLICKR_API_KEY']
+      FlickRaw.shared_secret = ENV['FLICKR_API_SECRET']
+
+      if ENV['FLICKR_ACCESS_TOKEN'] && ENV['FLICKR_ACCESS_SECRET']
+        flickr.access_token = ENV['FLICKR_ACCESS_TOKEN']
+        flickr.access_secret = ENV['FLICKR_ACCESS_SECRET']
+        login = flickr.test.login
+        puts "You are now authenticated as #{login.username}"
+      else
+        token = flickr.get_request_token
+        auth_url = flickr.get_authorize_url(token['oauth_token'], perms: 'write')
+
+        puts "Authorization url: #{auth_url}"
+        ask 'Press any key to open:'
+        `open '#{auth_url}'`
+        verify = ask "Enter authorization code:"
+
+        begin
+          flickr.get_access_token(token['oauth_token'], token['oauth_token_secret'], verify)
+          login = flickr.test.login
+          puts "You are now authenticated as #{login.username} with token #{flickr.access_token} and secret #{flickr.access_secret}"
+          append_to_dotenv(
+            FLICKR_ACCESS_TOKEN: flickr.access_token,
+            FLICKR_ACCESS_SECRET: flickr.access_secret,
+          )
+        rescue FlickRaw::FailedResponse => e
+          puts "Authentication failed : #{e.msg}"
+        end
+      end
+    end
+
+    def append_to_dotenv(settings)
+      File.open('.env', 'a') do |f|
+        settings.each do |k, v|
+          f.puts "#{k.upcase}=#{v}"
+        end
+      end
+    end
+
+    def tag_name(rating)
+      "iphoto-rating-#{rating}"
+    end
   end
 end
 

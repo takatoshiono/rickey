@@ -25,6 +25,7 @@ In your .env file
 ```
 FLICKR_API_KEY=[flickr api key]
 FLICKR_API_SECRET=[flickr api secret]
+IPHOTO_LIBRARY_PATH=/Users/[username]/Pictures/iPhoto Library/AlbumData.xml
 ```
 
 ## Usage
