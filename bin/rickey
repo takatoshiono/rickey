@@ -130,13 +130,7 @@ class RickeyCommand < Thor
     end
 
     def tag_name(rating)
-      {
-        '1' => 'hi',
-        '2' => '',
-        '3' => '',
-        '4' => '',
-        '5' => 'important',
-      }[rating.to_s]
+      "iphoto-rating-#{rating}"
     end
   end
 end
